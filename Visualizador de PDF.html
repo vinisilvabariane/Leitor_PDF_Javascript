@@ -2,344 +2,352 @@
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Visualizador de PDF com Zoom e Navegação</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.15.349/pdf.min.js"></script>
-    <script>
-        // Definir o caminho do worker do pdf.js
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.15.349/pdf.worker.min.js';
-    </script>
-    <style>
-        body {
-            background-color: #121212;
-            /* Escuro */
-            color: #e0e0e0;
-            /* Cor do texto em modo dark */
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Visualizador</title>
+  <link rel="icon" type="image/png" sizes="16x16" href="/prod/public/images/favicon.svg">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.15.349/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.15.349/pdf.worker.min.js';
+  </script>
+  <style>
+    body {
+      background-color: #0050dc;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
 
-        .card {
-            background: #1e1e1e;
-            /* Fundo escuro para o card */
-            border: none;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            /* Sombra mais suave para o modo escuro */
-            border-radius: 16px;
-            opacity: 0;
-            transform: translateY(50px);
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
+    .container {
+      padding-top: 50px;
+      padding-bottom: 50px;
+    }
 
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+    .card {
+      background: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      padding: 20px !important;
+      opacity: 0;
+      transform: translateY(50px);
+      animation: fadeInUp 0.8s ease-out forwards;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-        .form-label {
-            font-weight: 600;
-            color: #e0e0e0;
-            /* Cor da label em modo dark */
-        }
+    .pdf-container {
+      position: relative;
+      width: 80%;
+      /* Defina um tamanho fixo ou percentual */
+      max-width: 800px;
+      /* Defina um limite máximo para o tamanho */
+      height: 600px;
+      /* Ajuste conforme necessário */
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto;
+      /* Centraliza no card */
+      touch-action: none;
+    }
 
-        .btn-primary {
-            border-radius: 10px;
-            padding: 10px 20px;
-            background-color: #6200ea;
-            /* Cor do botão em modo escuro */
-            color: white;
-            /* Cor do texto no botão */
-        }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-        .form-group {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.6s ease-out forwards;
-        }
+    #pdf-viewer {
+      width: 100%;
+      height: 100%;
+      transition: transform 0.3s ease;
+      cursor: grab;
+      display: block;
+    }
 
-        .form-group:nth-child(n) {
-            animation-delay: calc(0.1s * var(--i));
-        }
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
 
-        @media (max-width: 768px) {
-            .form-label {
-                font-size: 0.9rem;
-            }
-        }
+    #zoom-slider {
+      width: 80%;
+      margin: 0 auto;
+    }
 
-        .btn-full {
-            width: 100%;
-        }
+    #fullscreen-exit-btn {
+      display: none;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1001;
+    }
 
-        #pdf-viewer {
-            width: 100%;
-            height: 100vh;
-            margin-top: 20px;
-            transition: transform 0.3s ease;
-            cursor: grab;
-            display: block;
-        }
+    /* Botões de navegação em tela cheia */
+    .fullscreen-nav-btn {
+      display: none;
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 1000;
+      background-color: rgba(0, 80, 220, 0.7);
+      color: white;
+      border: none;
+      width: 60px;
+      height: 120px;
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.3s;
+      opacity: 0.5;
+    }
 
-        .container {
-            max-width: 1200px;
-            margin-top: 30px;
-        }
+    .fullscreen-nav-btn:hover {
+      opacity: 1;
+      background-color: rgba(0, 80, 220, 0.9);
+    }
 
-        .pdf-container {
-            position: relative;
-            width: 100%;
-            height: 100vh;
-            background-color: #2a2a2a;
-            /* Cor do fundo da área do PDF */
-            border-radius: 10px;
-            overflow: hidden;
-            cursor: grab;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-            touch-action: none;
-        }
+    #fullscreen-prev-btn {
+      left: 0;
+      border-radius: 0 8px 8px 0;
+    }
 
-        .controls {
-            margin-top: 20px;
-            text-align: center;
-        }
+    #fullscreen-next-btn {
+      right: 0;
+      border-radius: 8px 0 0 8px;
+    }
 
-        #zoom-slider {
-            width: 80%;
-            margin: 0 auto;
-        }
+    body.fullscreen .fullscreen-nav-btn {
+      display: block;
+    }
 
-        .zoom-buttons {
-            margin: 0 10px;
-        }
+    body.fullscreen .pdf-container {
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      border-radius: 0;
+    }
 
-        #pdf-navigation {
-            margin-top: 20px;
-        }
+    body.fullscreen .container {
+      padding: 0;
+    }
 
-        #page-num {
-            font-weight: bold;
-            color: #e0e0e0;
-            /* Cor do número da página */
-        }
+    body.fullscreen .card {
+      border-radius: 0;
+      max-width: none;
+      height: 100vh;
+      padding: 0 !important;
+    }
 
-        .fullscreen-button {
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .fullscreen-controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            z-index: 1000;
-            padding: 10px;
-            background-color: rgba(0, 0, 0, 0.8);
-            /* Fundo mais escuro para os controles */
-            border-radius: 5px;
-        }
-
-        .fullscreen-controls button {
-            margin-bottom: 10px;
-            background-color: #6200ea;
-            /* Cor do botão */
-            color: white;
-            /* Cor do texto no botão */
-        }
-
-        .fullscreen-mode {
-            display: none;
-        }
-    </style>
+    body.fullscreen .controls,
+    body.fullscreen .fullscreen-button,
+    body.fullscreen h2,
+    body.fullscreen #pdf-navigation {
+      display: none;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="card p-4">
-            <h2 class="mb-4 text-center text-primary">Visualizador de PDF</h2>
+  <div class="container">
+    <div class="card p-4">
+      <h2 class="mb-4 text-center text-primary">Visualizador de PDF</h2>
 
-            <div class="text-center">
-                <input type="file" id="upload-pdf" class="btn btn-outline-primary" accept="application/pdf" />
-            </div>
+      <div class="text-center">
+        <input type="file" id="upload-pdf" class="btn btn-outline-primary" accept="application/pdf" />
+      </div>
 
-            <!-- PDF Viewer Container -->
-            <div class="pdf-container" id="pdf-container">
-                <div id="pdf-viewer"></div>
-            </div>
+      <div class="pdf-container" id="pdf-container">
+        <button id="fullscreen-exit-btn" class="btn btn-danger">Sair da Tela Cheia</button>
+        <button id="fullscreen-prev-btn" class="fullscreen-nav-btn">‹</button>
+        <button id="fullscreen-next-btn" class="fullscreen-nav-btn">›</button>
+        <div id="pdf-viewer"></div>
+      </div>
 
-            <!-- Controle de Zoom com Slider -->
-            <div class="controls">
-                <label for="zoom-slider" class="form-label">Zoom</label>
-                <input type="range" class="form-range" id="zoom-slider" min="0.5" max="3" step="0.1" value="1.5" />
-                <span id="zoom-value">Zoom: 150%</span>
-            </div>
+      <div class="controls">
+        <label for="zoom-slider" class="form-label">Zoom</label>
+        <input type="range" class="form-range" id="zoom-slider" min="0.5" max="3" step="0.1" value="1.5" />
+        <span id="zoom-value">Zoom: 150%</span>
+      </div>
 
-            <div id="pdf-navigation">
-                <button class="btn btn-primary" id="prev-page">Anterior</button>
-                <span id="page-num">Página: 1</span>
-                <button class="btn btn-primary" id="next-page">Próxima</button>
-            </div>
+      <div id="pdf-navigation" class="text-center mt-3">
+        <button class="btn btn-primary" id="prev-page">Anterior</button>
+        <span id="page-num">Página: 1</span>
+        <button class="btn btn-primary" id="next-page">Próxima</button>
+      </div>
 
-            <!-- Botão de Tela Cheia -->
-            <div class="fullscreen-button">
-                <button class="btn btn-outline-success" id="fullscreen-btn">Tela Cheia</button>
-            </div>
-        </div>
+      <div class="fullscreen-button text-center mt-4">
+        <button class="btn btn-outline-success" id="fullscreen-btn">Tela Cheia</button>
+      </div>
     </div>
+  </div>
 
-    <script>
-        let pdfDoc = null;
-        let currentPage = 1;
-        let scale = 1.5; // Fator de zoom inicial
-        let isDragging = false;
-        let startX, startY;
-        let currentX = 0,
-            currentY = 0;
+  <script>
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = 1.5;
+    let isDragging = false;
+    let startX, startY;
+    let currentX = 0,
+      currentY = 0;
 
-        document.getElementById('upload-pdf').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file && file.type === 'application/pdf') {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const url = e.target.result;
-                    loadPDF(url);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                alert('Por favor, selecione um arquivo PDF válido.');
-            }
+    const uploadPdf = document.getElementById('upload-pdf');
+    const pdfViewer = document.getElementById('pdf-viewer');
+    const pdfContainer = document.getElementById('pdf-container');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const zoomValue = document.getElementById('zoom-value');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const fullscreenExitBtn = document.getElementById('fullscreen-exit-btn');
+    const fullscreenPrevBtn = document.getElementById('fullscreen-prev-btn');
+    const fullscreenNextBtn = document.getElementById('fullscreen-next-btn');
+    const pageNum = document.getElementById('page-num');
+
+    uploadPdf.addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file && file.type === 'application/pdf') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          loadPDF(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        alert('Por favor, selecione um arquivo PDF válido.');
+      }
+    });
+
+    function loadPDF(url) {
+      pdfjsLib.getDocument(url).promise.then(function(pdf) {
+        pdfDoc = pdf;
+        currentPage = 1;
+        renderPage(currentPage);
+      });
+    }
+
+    function renderPage(pageNumNow) {
+      if (!pdfDoc) return;
+      
+      pdfDoc.getPage(pageNumNow).then(function(page) {
+        const viewport = page.getViewport({
+          scale: scale
+        });
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        pdfViewer.innerHTML = '';
+        pdfViewer.appendChild(canvas);
+
+        page.render({
+          canvasContext: context,
+          viewport: viewport
         });
 
-        // Função para carregar o PDF
-        function loadPDF(url) {
-            pdfjsLib.getDocument(url).promise.then(function(pdf) {
-                pdfDoc = pdf;
-                renderPage(currentPage);
-            });
-        }
+        pageNum.textContent = `Página: ${currentPage} de ${pdfDoc.numPages}`;
+      });
+    }
 
-        // Função para renderizar a página
-        function renderPage(pageNum) {
-            pdfDoc.getPage(pageNum).then(function(page) {
-                const viewport = page.getViewport({
-                    scale: scale
-                });
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+    function goToPrevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPage(currentPage);
+      }
+    }
 
-                const pdfViewer = document.getElementById('pdf-viewer');
-                pdfViewer.innerHTML = ''; // Limpar o conteúdo anterior
-                pdfViewer.appendChild(canvas);
+    function goToNextPage() {
+      if (pdfDoc && currentPage < pdfDoc.numPages) {
+        currentPage++;
+        renderPage(currentPage);
+      }
+    }
 
-                page.render({
-                    canvasContext: context,
-                    viewport: viewport
-                });
+    zoomSlider.addEventListener('input', function() {
+      scale = parseFloat(this.value);
+      zoomValue.textContent = `Zoom: ${Math.round(scale * 100)}%`;
+      renderPage(currentPage);
+    });
 
-                document.getElementById('page-num').textContent = `Página: ${currentPage}`;
-            });
-        }
+    prevPageBtn.addEventListener('click', goToPrevPage);
+    nextPageBtn.addEventListener('click', goToNextPage);
+    fullscreenPrevBtn.addEventListener('click', goToPrevPage);
+    fullscreenNextBtn.addEventListener('click', goToNextPage);
 
-        // Controle de zoom via slider
-        document.getElementById('zoom-slider').addEventListener('input', function(event) {
-            scale = parseFloat(event.target.value);
-            document.getElementById('zoom-value').textContent = `Zoom: ${Math.round(scale * 100)}%`;
-            renderPage(currentPage); // Re-renderizar a página com o novo zoom
-        });
+    fullscreenBtn.addEventListener('click', function() {
+      if (pdfContainer.requestFullscreen) {
+        pdfContainer.requestFullscreen();
+      }
+    });
 
-        // Navegação entre páginas
-        document.getElementById('prev-page').addEventListener('click', function() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderPage(currentPage);
-            }
-        });
+    fullscreenExitBtn.addEventListener('click', function() {
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    });
 
-        document.getElementById('next-page').addEventListener('click', function() {
-            if (currentPage < pdfDoc.numPages) {
-                currentPage++;
-                renderPage(currentPage);
-            }
-        });
+    pdfViewer.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.pageX - currentX;
+      startY = e.pageY - currentY;
+      pdfViewer.style.cursor = 'grabbing';
+    });
 
-        // Funcionalidade de arraste livre (somente o conteúdo do PDF)
-        const pdfViewer = document.getElementById('pdf-viewer');
+    pdfViewer.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        currentX = e.pageX - startX;
+        currentY = e.pageY - startY;
+        pdfViewer.style.transform = `translate(${currentX}px, ${currentY}px)`;
+      }
+    });
 
-        pdfViewer.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.pageX - currentX;
-            startY = e.pageY - currentY;
-            pdfViewer.style.cursor = 'grabbing';
-        });
+    pdfViewer.addEventListener('mouseup', () => {
+      isDragging = false;
+      pdfViewer.style.cursor = 'grab';
+    });
 
-        pdfViewer.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                e.preventDefault();
-                currentX = e.pageX - startX;
-                currentY = e.pageY - startY;
-                pdfViewer.style.transform = `translate(${currentX}px, ${currentY}px)`; // Arrastar somente o conteúdo
-            }
-        });
+    pdfViewer.addEventListener('wheel', function(e) {
+      e.preventDefault();
+      if (e.deltaY < 0) {
+        scale += 0.1;
+      } else {
+        scale -= 0.1;
+      }
+      scale = Math.min(Math.max(scale, 0.5), 3); // limita entre 0.5x e 3x
+      zoomSlider.value = scale;
+      zoomValue.textContent = `Zoom: ${Math.round(scale * 100)}%`;
+      renderPage(currentPage);
+    });
 
-        pdfViewer.addEventListener('mouseup', () => {
-            isDragging = false;
-            pdfViewer.style.cursor = 'grab';
-        });
+    document.addEventListener('keydown', function(e) {
+      if (!pdfDoc) return;
+      if (e.key === 'ArrowLeft') {
+        goToPrevPage();
+      } else if (e.key === 'ArrowRight') {
+        goToNextPage();
+      }
+    });
 
-        pdfViewer.addEventListener('mouseleave', () => {
-            isDragging = false;
-            pdfViewer.style.cursor = 'grab';
-        });
-
-        // Navegação com as setas do teclado
-        document.addEventListener('keydown', function(e) {
-            if (e.key === "ArrowRight" || e.key === "ArrowDown") {
-                if (currentPage < pdfDoc.numPages) {
-                    currentPage++;
-                    renderPage(currentPage);
-                }
-            } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
-                if (currentPage > 1) {
-                    currentPage--;
-                    renderPage(currentPage);
-                }
-            }
-        });
-
-        // Zoom com o scroll do mouse
-        pdfViewer.addEventListener('wheel', function(e) {
-            e.preventDefault();
-            if (e.deltaY < 0) {
-                scale = Math.min(scale + 0.1, 3); // Zoom in
-            } else {
-                scale = Math.max(scale - 0.1, 0.5); // Zoom out
-            }
-            renderPage(currentPage); // Re-renderizar a página com o novo zoom
-        });
-
-        // Funcionalidade para tela cheia
-        document.getElementById('fullscreen-btn').addEventListener('click', function() {
-            const pdfContainer = document.getElementById('pdf-container');
-            if (pdfContainer.requestFullscreen) {
-                pdfContainer.requestFullscreen();
-            } else if (pdfContainer.mozRequestFullScreen) {
-                pdfContainer.mozRequestFullScreen();
-            } else if (pdfContainer.webkitRequestFullscreen) {
-                pdfContainer.webkitRequestFullscreen();
-            } else if (pdfContainer.msRequestFullscreen) {
-                pdfContainer.msRequestFullscreen();
-            }
-        });
-    </script>
+    document.addEventListener('fullscreenchange', function() {
+      if (document.fullscreenElement) {
+        fullscreenExitBtn.style.display = 'block';
+        document.body.classList.add('fullscreen');
+      } else {
+        fullscreenExitBtn.style.display = 'none';
+        document.body.classList.remove('fullscreen');
+        pdfViewer.style.transform = 'translate(0px, 0px)';
+        currentX = 0;
+        currentY = 0;
+      }
+    });
+  </script>
 </body>
 
 </html>
