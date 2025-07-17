@@ -1,0 +1,140 @@
+body {
+    background-color: #0050dc;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+.container {
+    padding-top: 50px;
+    padding-bottom: 50px;
+}
+
+.card {
+    background: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    padding: 20px !important;
+    opacity: 0;
+    transform: translateY(50px);
+    animation: fadeInUp 0.8s ease-out forwards;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.pdf-container {
+    position: relative;
+    width: 80%;
+    /* Defina um tamanho fixo ou percentual */
+    max-width: 800px;
+    /* Defina um limite máximo para o tamanho */
+    height: 600px;
+    /* Ajuste conforme necessário */
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: grab;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    /* Centraliza no card */
+    touch-action: none;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#pdf-viewer {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.3s ease;
+    cursor: grab;
+    display: block;
+}
+
+.controls {
+    margin-top: 20px;
+    text-align: center;
+}
+
+#zoom-slider {
+    width: 80%;
+    margin: 0 auto;
+}
+
+#fullscreen-exit-btn {
+    display: none;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1001;
+}
+
+/* Botões de navegação em tela cheia */
+.fullscreen-nav-btn {
+    display: none;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1000;
+    background-color: rgba(0, 80, 220, 0.7);
+    color: white;
+    border: none;
+    width: 60px;
+    height: 120px;
+    font-size: 24px;
+    cursor: pointer;
+    transition: all 0.3s;
+    opacity: 0.5;
+}
+
+.fullscreen-nav-btn:hover {
+    opacity: 1;
+    background-color: rgba(0, 80, 220, 0.9);
+}
+
+#fullscreen-prev-btn {
+    left: 0;
+    border-radius: 0 8px 8px 0;
+}
+
+#fullscreen-next-btn {
+    right: 0;
+    border-radius: 8px 0 0 8px;
+}
+
+body.fullscreen .fullscreen-nav-btn {
+    display: block;
+}
+
+body.fullscreen .pdf-container {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    border-radius: 0;
+}
+
+body.fullscreen .container {
+    padding: 0;
+}
+
+body.fullscreen .card {
+    border-radius: 0;
+    max-width: none;
+    height: 100vh;
+    padding: 0 !important;
+}
+
+body.fullscreen .controls,
+body.fullscreen .fullscreen-button,
+body.fullscreen h2,
+body.fullscreen #pdf-navigation {
+    display: none;
+}
