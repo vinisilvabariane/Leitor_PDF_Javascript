@@ -1,9 +1,15 @@
-## Projeto Visualizador de PDF
------------------------------------------
+## 📄 Projeto Visualizador de PDF
 
-Página para leitura responsiva de arquivos PDF, funções confortáveis para facilitar a leitura e acomodar o leitor
+Uma página web responsiva desenvolvida para leitura confortável de arquivos PDF, com funcionalidades que otimizam a experiência do usuário.
 
-## Tecnologias
------------------------------------------
+### ✨ Funcionalidades
 
-Javascript e CSS
+- Leitura otimizada para **celulares**, **tablets** e **desktops**
+- **Zoom** para facilitar a visualização dos detalhes
+- **Arraste do arquivo PDF** diretamente para a página
+- Interface limpa e responsiva, com foco na acessibilidade
+
+### 🛠️ Tecnologias utilizadas
+
+- **JavaScript**
+- **CSS**
